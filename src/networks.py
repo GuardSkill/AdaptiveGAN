@@ -42,7 +42,7 @@ class BaseNetwork(nn.Module):
 
 
 class LinkNet(BaseNetwork):
-    def __init__(self, in_channels=3, residual_blocks=3, init_weights=True):
+    def __init__(self, in_channels=3, residual_blocks=4, init_weights=True):
         self.inplanes = in_channels
         super(LinkNet, self).__init__()
         self.layer1 = nn.Sequential(
@@ -51,65 +51,70 @@ class LinkNet(BaseNetwork):
             nn.Tanh()
         )
         self.layer2 = nn.Sequential(
-            nn.ZeroPad2d(6),
-            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=7, stride=2, dilation=1, bias=True),   # original dilation 2
+            nn.ZeroPad2d(3),
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=7, stride=2, dilation=1, bias=True),
+            # original dilation 2
             nn.Tanh()
         )
         self.layer3 = nn.Sequential(
-            nn.ZeroPad2d(4),
-            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=5, stride=2, dilation=1, bias=True),   # original dilation2
+            nn.ZeroPad2d(2),
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=5, stride=2, dilation=1, bias=True),
+            # original dilation2
             nn.Tanh()
         )
         self.layer4 = nn.Sequential(
-            nn.ZeroPad2d(4),
-            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=5, stride=2, dilation=1, bias=True),    # original dilation2
+            nn.ZeroPad2d(2),
+            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=5, stride=2, dilation=1, bias=True),
+            # original dilation2
             nn.Tanh()
         )
         self.layer5 = nn.Sequential(
             nn.ZeroPad2d(2),
-            nn.Conv2d(in_channels=256, out_channels=512, kernel_size=5, stride=2, dilation=1, bias=True),        # original dilation2
+            nn.Conv2d(in_channels=256, out_channels=512, kernel_size=5, stride=2, dilation=1, bias=True),
+            # original dilation2
             nn.Tanh()
         )
 
-        self.up2=nn.Sequential(
-            nn.Conv2d(64,32,1, 1, 0, bias=True),
+        self.up2 = nn.Sequential(
+            nn.Conv2d(64, 32, 1, 1, 0, bias=True),
             nn.Tanh(),
             nn.Upsample(scale_factor=2 << 0, mode='bilinear')
         )
 
-        self.up3=nn.Sequential(
-            nn.Conv2d(128,32,1, 1, 0, bias=True),
+        self.up3 = nn.Sequential(
+            nn.Conv2d(128, 32, 1, 1, 0, bias=True),
             nn.Tanh(),
             nn.Upsample(scale_factor=2 << 1, mode='bilinear')
         )
-        self.up4 =nn.Sequential(
-            nn.Conv2d(256,32,1, 1, 0, bias=True),
+        self.up4 = nn.Sequential(
+            nn.Conv2d(256, 32, 1, 1, 0, bias=True),
             nn.Tanh(),
             nn.Upsample(scale_factor=2 << 2, mode='bilinear')
         )
 
-        self.up5  =nn.Sequential(
-            nn.Conv2d(512,32,1, 1, 0, bias=True),
+        self.up5 = nn.Sequential(
+            nn.Conv2d(512, 32, 1, 1, 0, bias=True),
             nn.Tanh(),
             nn.Upsample(scale_factor=2 << 3, mode='bilinear')
         )
-        layers =[]
-        downsample=nn.Conv2d(in_channels=160, out_channels=32, kernel_size=3,
-                                    padding=1, dilation=1, bias=True)
+        layers = []
+        downsample = nn.Conv2d(in_channels=160, out_channels=32, kernel_size=3,
+                               padding=1, dilation=1, bias=True)
         layers.append(
-            BottleneckBlock(in_channels=160, out_channels=32,downsample=downsample)
+            BottleneckBlock(in_channels=160, out_channels=32, downsample=downsample)
         )
         for i in range(residual_blocks):
             layers.append(
                 ResnetBlock(
-                    in_channels=32, dilation=2, use_spectral_norm=False          # original dilation 1
+                    in_channels=32, dilation=2*(i+1), use_spectral_norm=False  # original dilation 1
                 )
             )
         layers.append(
-                nn.Conv2d(in_channels=32, out_channels=3, kernel_size=3, stride=1,
-                          padding=1, dilation=1, bias=True))
+            nn.Conv2d(in_channels=32, out_channels=3, kernel_size=3, stride=1,
+                      padding=1, dilation=1, bias=True))
 
-        self.fusion_layers=nn.Sequential(*layers)
+        self.fusion_layers = nn.Sequential(*layers)
+
     def forward(self, x):
         x1 = self.layer1(x)
         x2 = self.layer2(x1)
@@ -117,9 +122,9 @@ class LinkNet(BaseNetwork):
         x4 = self.layer4(x3)
         x5 = self.layer5(x4)
         # x=x1+self.up2(x2)+self.up3(x3)+self.up4(x4)+self.up5(x5)
-        x=torch.cat([x1,self.up2(x2),self.up3(x3),self.up4(x4),self.up5(x5)],1)
-        x=self.fusion_layers(x)
-        x = (torch.tanh(x)+ 1) / 2
+        x = torch.cat([x1, self.up2(x2), self.up3(x3), self.up4(x4), self.up5(x5)], 1)
+        x = self.fusion_layers(x)
+        x = (torch.tanh(x) + 1) / 2
         return x
 
 

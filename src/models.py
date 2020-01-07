@@ -64,12 +64,14 @@ class InpaintingModel(BaseModel):
         in_channel = 3
         generator = LinkNet(in_channel, config.BLOCKS)
         # generator=UnetGeneratorSame()       Unet-lile generator
-        print("This Model Total params:", (sum([param.nelement() for param in generator.parameters()])))
         # summary(generator, (3, 256, 256), 6,device='cpu')
         # print(generator)
-
         # discriminator input: [rgb(3)]
         discriminator = Discriminator(in_channels=3, use_sigmoid=config.GAN_LOSS != 'hinge')
+        params=sum([param.nelement() for param in generator.parameters()])
+        print("This Generative Model Total params: {}M /  {}K".format (params>>20,params>>10))
+        params = sum([param.nelement() for param in discriminator.parameters()])
+        print("This Adversarial Model Total params: {}M /  {}K".format(params >> 20, params >> 10))
         l1_loss = nn.L1Loss()
         perceptual_loss = PerceptualLoss()
         style_loss = StyleLoss()
