@@ -3,7 +3,9 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from .networks import Discriminator, UnetGenerator, UnetGeneratorSame, LinkNet
+from .networks import Discriminator
+from .blocks import LinkNet
+
 from .loss import AdversarialLoss, PerceptualLoss, StyleLoss, GradientLoss
 
 

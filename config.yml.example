@@ -14,7 +14,7 @@ TRAIN_MASK_FLIST: ./datasets/mask_train.flist
 VAL_MASK_FLIST: ./datasets/mask_train.flist
 TEST_MASK_FLIST: ./datasets/mask_train.flist
 
-BLOCKS: 4                     # set the res block in each stage
+BLOCKS: 1                     # set the res block in each stage
 LR: 1e-4                      # learning rate
 D2G_LR: 0.1                   # discriminator/generator learning rate ratio
 BETA1: 0.0                    # adam optimizer beta1
