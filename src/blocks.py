@@ -129,7 +129,7 @@ class LinkNet(nn.Module):
             nn.Upsample(scale_factor=2 << 3, mode='bilinear')
         )
 
-        self.fusion=Block(5, 16, 48, 32,1)
+        self.fusion=Block(5, 16*5, 48, 32,1)
         self.block_fusion = nn.Sequential(
             *[Block(5, 32, 48, 32, 1) for _ in range(residual_blocks*2)]
             # nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False)
@@ -160,8 +160,8 @@ class LinkNet(nn.Module):
         x3 = self.block3(self.conv3(x2))
         x4 = self.block4(self.conv4(x3))
         x5 = self.block5(self.conv5(x4))
-        x=x1+self.up2(x2)+self.up3(x3)+self.up4(x4)+self.up5(x5)
-        # x = torch.cat([x1, self.up2(x2), self.up3(x3), self.up4(x4), self.up5(x5)], 1)
+        # x=x1+self.up2(x2)+self.up3(x3)+self.up4(x4)+self.up5(x5)
+        x = torch.cat([x1, self.up2(x2), self.up3(x3), self.up4(x4), self.up5(x5)], 1)
         x = self.block_fusion(self.fusion(x))
         x=self.final(x)
         out = (torch.tanh(x) + 1) / 2
