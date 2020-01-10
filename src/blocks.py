@@ -107,24 +107,24 @@ class LinkNet(nn.Module):
 
 
         self.up2 = nn.Sequential(
-            nn.Conv2d(24, 16, 1, 1, 0, bias=True),
+            nn.Conv2d(24, 16, 3, 1, 1, bias=False),
             nn.Tanh(),
             nn.Upsample(scale_factor=2 << 0, mode='bilinear')
         )
 
         self.up3 = nn.Sequential(
-            nn.Conv2d(40, 16, 1, 1, 0, bias=True),
+            nn.Conv2d(40, 16, 3, 1, 1, bias=False),
             nn.Tanh(),
             nn.Upsample(scale_factor=2 << 1, mode='bilinear')
         )
         self.up4 = nn.Sequential(
-            nn.Conv2d(80, 16, 1, 1, 0, bias=True),
+            nn.Conv2d(80, 16, 3, 1, 1, bias=False),
             nn.Tanh(),
             nn.Upsample(scale_factor=2 << 2, mode='bilinear')
         )
 
         self.up5 = nn.Sequential(
-            nn.Conv2d(160, 16, 1, 1, 0, bias=True),
+            nn.Conv2d(160, 16, 3, 1, 1, bias=False),
             nn.Tanh(),
             nn.Upsample(scale_factor=2 << 3, mode='bilinear')
         )
