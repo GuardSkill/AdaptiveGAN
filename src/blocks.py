@@ -32,11 +32,39 @@ class SeModule(nn.Module):
     def forward(self, x):
         return x * self.se(x)
 
+# class BottleneckBlock(nn.Module):
+#     expansion = 2
+#
+#     def __init__(self, in_channels, out_channels, stride=1, dilation=1, use_spectral_norm=False, downsample=None):
+#         super(BottleneckBlock, self).__init__()
+#         self.downsample = downsample
+#         self.stride = stride
+#         self.conv_block = nn.Sequential(
+#             nn.ZeroPad2d(dilation),
+#             spectral_norm(
+#                 nn.Conv2d(in_channels=in_channels, out_channels=out_channels * 2, kernel_size=3, stride=stride,
+#                           padding=0, dilation=dilation, bias=not use_spectral_norm), use_spectral_norm),
+#             # nn.LeakyReLU(0.2, inplace=False),
+#             nn.Tanh(),
+#             nn.ZeroPad2d(1),
+#             spectral_norm(
+#                 nn.Conv2d(in_channels=out_channels * 2, out_channels=out_channels, kernel_size=3, stride=stride,
+#                           padding=0, dilation=1, bias=not use_spectral_norm), use_spectral_norm),
+#         )
+#
+#     def forward(self, x):
+#         residual = x
+#         if self.downsample is not None:
+#             residual = self.downsample(x)
+#         out = self.conv_block(x) + residual
+#         # out = nn.LeakyReLU(0.2, inplace=False)(out)
+#         out = nn.Tanh()(out)
+#         return out
 
 class Block(nn.Module):
     '''expand + depthwise + pointwise'''
 
-    def __init__(self, kernel_size, in_size, expand_size, out_size, stride):
+    def __init__(self, kernel_size, in_size, expand_size, out_size, stride,dilation=1):
         super(Block, self).__init__()
         self.stride = stride
         self.se = SeModule(out_size)
@@ -44,7 +72,7 @@ class Block(nn.Module):
         self.conv1 = nn.Conv2d(in_size, expand_size, kernel_size=1, stride=1, padding=0, bias=False)
         self.nolinear1 = nn.Tanh()
         self.conv2 = nn.Conv2d(expand_size, expand_size, kernel_size=kernel_size, stride=stride,
-                               padding=kernel_size // 2, groups=expand_size, bias=False)
+                               padding=(kernel_size+ (kernel_size-1)*(dilation-1)-1)// 2, dilation=dilation,groups=expand_size, bias=False)
         self.nolinear2 = nn.Tanh()
         self.conv3 = nn.Conv2d(expand_size, out_size, kernel_size=1, stride=1, padding=0, bias=False)
 
@@ -72,30 +100,30 @@ class LinkNet(nn.Module):
             nn.Tanh()
         )
         self.block1 = nn.Sequential(
-            *[Block(3, 16, 16, 16, 1) for i in range(residual_blocks)]
+            *[Block(3, 16, 16, 16, 1) for i in range(residual_blocks)]       #residual_blocks1
         )
         #  out 16
         self.conv2=Block(3, 16, 64, 24,2)
         self.block2 = nn.Sequential(
-            *[Block(3, 24, 72, 24, 1) for _ in range(residual_blocks)]
+            *[Block(3, 24, 72, 24, 1) for _ in range(residual_blocks*2)]          #residual_blocks1
         )
         #  out 24
 
         self.conv3=Block(5, 24, 72, 40,2)
         self.block3 = nn.Sequential(
-            *[Block(5, 40, 120, 40, 1) for _ in range(residual_blocks*2)]
+            *[Block(5, 40, 120, 40, 1) for _ in range(residual_blocks*3)]  #residual_blocks2
         )
         #  out 40
 
-        self.conv4=Block(3, 40, 240, 80,2)
+        self.conv4=Block(3, 40, 240, 80,2,1)
         self.block4 = nn.Sequential(
-            *[Block(3, 80, 200, 80, 1) for _ in range(residual_blocks*3)]
+            *[Block(3, 80, 200, 80, 1,2) for _ in range(residual_blocks*4)]   #residual_blocks3
         )
         #  out 80
 
         self.conv5=Block(5, 80, 672, 160,2)
         self.block5 = nn.Sequential(
-            *[Block(5, 160, 960, 160, 1) for _ in range(residual_blocks*4)]
+            *[Block(5, 160, 960, 160, 1,4) for _ in range(residual_blocks*4)]
         )
         #  out 160
 
@@ -131,11 +159,11 @@ class LinkNet(nn.Module):
 
         self.fusion=Block(5, 16*5, 48, 32,1)
         self.block_fusion = nn.Sequential(
-            *[Block(5, 32, 48, 32, 1) for _ in range(residual_blocks*2)]
+            *[Block(5, 32, 48, 32, 1) for _ in range(residual_blocks*4)]             # 3x3 original:residual_blocks*2
             # nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False)
         )
         self.final=nn.Conv2d(32, 3, kernel_size=3, stride=1, padding=1, bias=False)
-
+        # self.final =Block(5, 32, 48, 3,1)      #kernel_size, in_size, expand_size, out_size, stride
         #  out 160
 
     #     self.init_params()
