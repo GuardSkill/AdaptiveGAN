@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 from .networks import Discriminator
-from .blocks import LinkNet
+from .blocks import LinkNet, PyramidNet
 
 from .loss import AdversarialLoss, PerceptualLoss, StyleLoss, GradientLoss
 
@@ -64,7 +64,7 @@ class InpaintingModel(BaseModel):
 
         # generator input: [rgb(3)]
         in_channel = 3
-        generator = LinkNet(in_channel, config.BLOCKS)
+        generator = PyramidNet(in_channel, config.BLOCKS)
         # generator=UnetGeneratorSame()       Unet-lile generator
         # summary(generator, (3, 256, 256), 6,device='cpu')
         # print(generator)

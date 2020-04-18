@@ -32,6 +32,7 @@ class SeModule(nn.Module):
     def forward(self, x):
         return x * self.se(x)
 
+
 # class BottleneckBlock(nn.Module):
 #     expansion = 2
 #
@@ -64,7 +65,7 @@ class SeModule(nn.Module):
 class Block(nn.Module):
     '''expand + depthwise + pointwise'''
 
-    def __init__(self, kernel_size, in_size, expand_size, out_size, stride,dilation=1):
+    def __init__(self, kernel_size, in_size, expand_size, out_size, stride, dilation=1):
         super(Block, self).__init__()
         self.stride = stride
         self.se = SeModule(out_size)
@@ -72,7 +73,8 @@ class Block(nn.Module):
         self.conv1 = nn.Conv2d(in_size, expand_size, kernel_size=1, stride=1, padding=0, bias=False)
         self.nolinear1 = nn.Tanh()
         self.conv2 = nn.Conv2d(expand_size, expand_size, kernel_size=kernel_size, stride=stride,
-                               padding=(kernel_size+ (kernel_size-1)*(dilation-1)-1)// 2, dilation=dilation,groups=expand_size, bias=False)
+                               padding=(kernel_size + (kernel_size - 1) * (dilation - 1) - 1) // 2, dilation=dilation,
+                               groups=expand_size, bias=False)
         self.nolinear2 = nn.Tanh()
         self.conv3 = nn.Conv2d(expand_size, out_size, kernel_size=1, stride=1, padding=0, bias=False)
 
@@ -95,35 +97,36 @@ class Block(nn.Module):
 class LinkNet(nn.Module):
     def __init__(self, in_channels=3, residual_blocks=1, init_weights=True):
         super(LinkNet, self).__init__()
-        self.conv1 =  nn.Sequential(
+        self.conv1 = nn.Sequential(
             nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False),
             nn.Tanh()
         )
         self.block1 = nn.Sequential(
-            *[Block(3, 16, 16, 16, 1) for i in range(residual_blocks)]       #residual_blocks1
+            *[Block(3, 16, 16, 16, 1) for i in range(residual_blocks)]
+            # residual_blocks1   kernel  input  expand output strike dilation
         )
         #  out 16
-        self.conv2=Block(3, 16, 64, 24,2)
+        self.conv2 = Block(3, 16, 64, 24, 2)
         self.block2 = nn.Sequential(
-            *[Block(3, 24, 72, 24, 1) for _ in range(residual_blocks*2)]          #residual_blocks1
+            *[Block(3, 24, 72, 24, 1) for _ in range(residual_blocks * 2)]  # residual_blocks1
         )
         #  out 24
 
-        self.conv3=Block(5, 24, 72, 40,2)
+        self.conv3 = Block(5, 24, 72, 40, 2)
         self.block3 = nn.Sequential(
-            *[Block(5, 40, 120, 40, 1) for _ in range(residual_blocks*3)]  #residual_blocks2
+            *[Block(5, 40, 120, 40, 1) for _ in range(residual_blocks * 3)]  # residual_blocks2
         )
         #  out 40
 
-        self.conv4=Block(3, 40, 240, 80,2,1)
+        self.conv4 = Block(3, 40, 240, 80, 2, 1)
         self.block4 = nn.Sequential(
-            *[Block(3, 80, 200, 80, 1,2) for _ in range(residual_blocks*4)]   #residual_blocks3
+            *[Block(3, 80, 200, 80, 1, 4) for _ in range(residual_blocks * 4)]  # residual_blocks3
         )
         #  out 80
 
-        self.conv5=Block(5, 80, 672, 160,2)
+        self.conv5 = Block(5, 80, 480, 160, 2)
         self.block5 = nn.Sequential(
-            *[Block(5, 160, 960, 160, 1,4) for _ in range(residual_blocks*4)]
+            *[Block(5, 160, 672, 160, 1, 4) for _ in range(residual_blocks * 4)]
         )
         #  out 160
 
@@ -132,7 +135,6 @@ class LinkNet(nn.Module):
         #     nn.Tanh(),
         #     # nn.Upsample(scale_factor=2 << 0, mode='bilinear')
         # )
-
 
         self.up2 = nn.Sequential(
             nn.Conv2d(24, 16, 3, 1, 1, bias=False),
@@ -157,12 +159,17 @@ class LinkNet(nn.Module):
             nn.Upsample(scale_factor=2 << 3, mode='bilinear')
         )
 
-        self.fusion=Block(5, 16*5, 48, 32,1)
-        self.block_fusion = nn.Sequential(
-            *[Block(5, 32, 48, 32, 1) for _ in range(residual_blocks*4)]             # 3x3 original:residual_blocks*2
+        self.fusion = nn.Sequential(
+            *[Block(5, 80, 160, 80, 1) for _ in range(residual_blocks * 4)],  # 3x3 original:residual_blocks*2
+            Block(5, 80, 48, 32, 1)
             # nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False)
         )
-        self.final=nn.Conv2d(32, 3, kernel_size=3, stride=1, padding=1, bias=False)
+
+        self.block_fusion = nn.Sequential(
+            *[Block(5, 32, 48, 32, 1) for _ in range(residual_blocks * 4)]  # 3x3 original:residual_blocks*2
+            # nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False)
+        )
+        self.final = nn.Conv2d(32, 3, kernel_size=3, stride=1, padding=1, bias=False)
         # self.final =Block(5, 32, 48, 3,1)      #kernel_size, in_size, expand_size, out_size, stride
         #  out 160
 
@@ -183,14 +190,145 @@ class LinkNet(nn.Module):
     #                 init.constant_(m.bias, 0)
 
     def forward(self, x):
-        x1=self.block1(self.conv1(x))
-        x2= self.block2(self.conv2(x1))
+        x1 = self.block1(self.conv1(x))
+        x2 = self.block2(self.conv2(x1))
         x3 = self.block3(self.conv3(x2))
         x4 = self.block4(self.conv4(x3))
         x5 = self.block5(self.conv5(x4))
         # x=x1+self.up2(x2)+self.up3(x3)+self.up4(x4)+self.up5(x5)
         x = torch.cat([x1, self.up2(x2), self.up3(x3), self.up4(x4), self.up5(x5)], 1)
         x = self.block_fusion(self.fusion(x))
-        x=self.final(x)
+        x = self.final(x)
         out = (torch.tanh(x) + 1) / 2
         return out
+
+
+class PyramidNet(nn.Module):
+    def __init__(self, in_channels=3, residual_blocks=1, init_weights=True):
+        super(PyramidNet, self).__init__()
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.Tanh()
+        )
+        self.block1 = nn.Sequential(
+            *[Block(3, 16, 16, 16, 1) for i in range(residual_blocks)]
+            # residual_blocks1   kernel  input  expand output strike dilation
+        )
+        #  out 16
+        self.conv2 = Block(3, 16, 64, 24, 2)
+        self.block2 = nn.Sequential(
+            *[Block(3, 24, 72, 24, 1) for _ in range(residual_blocks * 2)]  # residual_blocks1
+        )
+        #  out 24
+
+        self.conv3 = Block(5, 24, 72, 40, 2)
+        self.block3 = nn.Sequential(
+            *[Block(5, 40, 120, 40, 1) for _ in range(residual_blocks * 3)]  # residual_blocks2
+        )
+        #  out 40
+
+        self.conv4 = Block(3, 40, 240, 80, 2, 2)
+        self.block4 = nn.Sequential(
+            *[Block(3, 80, 200, 80, 1, 4) for _ in range(residual_blocks * 4)]  # residual_blocks3
+        )
+        #  out 80
+
+        self.conv5 = Block(5, 80, 480, 160, 2)
+        self.block5 = nn.Sequential(
+            *[Block(5, 160, 672, 160, 1, 4) for _ in range(residual_blocks * 4)]
+        )
+        #  out 160
+
+        # self.up1 = nn.Sequential(
+        #     nn.Conv2d(16, 16, 1, 1, 0, bias=True),
+        #     nn.Tanh(),
+        #     # nn.Upsample(scale_factor=2 << 0, mode='bilinear')
+        # )
+
+        self.channel_reduce4 = nn.Sequential(
+            nn.Conv2d(160, 80, 3, 1, 1, bias=False),
+            nn.Tanh(),
+        )
+
+        self.channel_reduce3 = nn.Sequential(
+            nn.Conv2d(80, 40, 3, 1, 1, bias=False),
+            nn.Tanh(),
+        )
+
+        self.channel_reduce2 = nn.Sequential(
+            nn.Conv2d(40, 24, 3, 1, 1, bias=False),
+            nn.Tanh(),
+        )
+
+        self.channel_reduce1 = nn.Sequential(
+            nn.Conv2d(24, 16, 3, 1, 1, bias=False),
+            nn.Tanh(),
+        )
+
+        self.smooth4 = nn.Conv2d(80, 80, kernel_size=3, stride=1, padding=1)
+        self.smooth3 = nn.Conv2d(40, 40, kernel_size=3, stride=1, padding=1)
+        self.smooth2 = nn.Conv2d(24, 24, kernel_size=3, stride=1, padding=1)
+        self.smooth1 = nn.Conv2d(16, 16, kernel_size=3, stride=1, padding=1)
+
+        self.fusion = nn.Sequential(
+            *[Block(5, 80, 160, 80, 1) for _ in range(residual_blocks * 4)],  # 3x3 original:residual_blocks*2
+            Block(5, 80, 48, 32, 1)
+            # nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False)
+        )
+
+        self.block_fusion = nn.Sequential(
+            *[Block(5, 32, 48, 32, 1) for _ in range(residual_blocks * 4)]  # 3x3 original:residual_blocks*2
+            # nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False)
+        )
+        self.final = nn.Conv2d(16, 3, kernel_size=3, stride=1, padding=1, bias=False)
+        # self.final =Block(5, 32, 48, 3,1)      #kernel_size, in_size, expand_size, out_size, stride
+        #  out 160
+
+    #     self.init_params()
+    #
+    # def init_params(self):
+    #     for m in self.modules():
+    #         if isinstance(m, nn.Conv2d):
+    #             init.kaiming_normal_(m.weight, mode='fan_out')
+    #             if m.bias is not None:
+    #                 init.constant_(m.bias, 0)
+    #         elif isinstance(m, nn.BatchNorm2d):
+    #             init.constant_(m.weight, 1)
+    #             init.constant_(m.bias, 0)
+    #         elif isinstance(m, nn.Linear):
+    #             init.normal_(m.weight, std=0.001)
+    #             if m.bias is not None:
+    #                 init.constant_(m.bias, 0)
+
+    def forward(self, x):
+        x1 = self.block1(self.conv1(x))
+        x2 = self.block2(self.conv2(x1))
+        x3 = self.block3(self.conv3(x2))
+        x4 = self.block4(self.conv4(x3))
+        x5 = self.block5(self.conv5(x4))
+        c4=self.smooth4(self._upsample_add( self.channel_reduce4(x5),x4))
+        c3=self.smooth3(self._upsample_add( self.channel_reduce3(c4),x3))
+        c2=self.smooth2(self._upsample_add( self.channel_reduce2(c3),x2))
+        c1=self.smooth1(self._upsample_add( self.channel_reduce1(c2),x1))
+        x = self.final(c1)
+        out = (torch.tanh(x) + 1) / 2
+        return out
+
+    def _upsample_add(self, x, y):
+        '''Upsample and add two feature maps.
+        Args:
+          x: (Variable) top feature map to be upsampled.
+          y: (Variable) lateral feature map.
+        Returns:
+          (Variable) added feature map.
+        Note in PyTorch, when input size is odd, the upsampled feature map
+        with `F.upsample(..., scale_factor=2, mode='nearest')`
+        maybe not equal to the lateral feature map size.
+        e.g.
+        original input size: [N,_,15,15] ->
+        conv2d feature map size: [N,_,8,8] ->
+        upsampled feature map size: [N,_,16,16]
+        So we choose bilinear upsample which supports arbitrary output sizes.
+        '''
+        _, _, H, W = y.size()
+        return F.upsample(x, size=(H, W), mode='bilinear') + y
