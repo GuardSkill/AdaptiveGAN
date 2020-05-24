@@ -97,10 +97,11 @@ class Block(nn.Module):
 class LinkNet(nn.Module):
     def __init__(self, in_channels=3, residual_blocks=1, init_weights=True):
         super(LinkNet, self).__init__()
-        self.conv1 = nn.Sequential(
+        self.conv1 =    nn.Sequential(
             nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False),
             nn.Tanh()
         )
+        # self.conv1 =Block(3, 3, 8, 16, 2)
         self.block1 = nn.Sequential(
             *[Block(3, 16, 16, 16, 1) for i in range(residual_blocks)]
             # residual_blocks1   kernel  input  expand output strike dilation

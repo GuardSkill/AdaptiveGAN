@@ -71,9 +71,9 @@ class InpaintingModel(BaseModel):
         # discriminator input: [rgb(3)]
         discriminator = Discriminator(in_channels=3, use_sigmoid=config.GAN_LOSS != 'hinge')
         params=sum([param.nelement() for param in generator.parameters()])
-        print("This Generative Model Total params: {}M /  {}K".format (params>>20,params>>10))
+        print("This Generative Model Total params: {}M /  {}K".format (round((params>>10)/1024,2),params>>10))
         params = sum([param.nelement() for param in discriminator.parameters()])
-        print("This Adversarial Model Total params: {}M /  {}K".format(params >> 20, params >> 10))
+        print("This Adversarial Model Total params: {}M /  {}K".format(round((params>>10)/1024,2), params >> 10))
         l1_loss = nn.L1Loss()
         perceptual_loss = PerceptualLoss()
         style_loss = StyleLoss()

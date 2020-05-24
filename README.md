@@ -64,7 +64,7 @@ Please note that our Places2 models are trained by multi GPUs, so please load us
 ### 1) Training
 To train the model, create a `config.yaml` file similar to the [example config file](https://github.com/GuardSkill/Large-Scale-Feature-Inpainting/blob/master/config.yml.example) and copy it under your checkpoints directory. Read the [configuration](#model-configuration) guide for more information on model configuration.
 
-To train the ISNet:
+To train the ISNet, set the `MODE:1` in corresponding config file `config.yaml`, and run command:
 ```bash
 python3 train.py --checkpoints [path to checkpoints]
 ```
@@ -72,7 +72,7 @@ python3 train.py --checkpoints [path to checkpoints]
 ### 2) Evaluation and Testing
 To test the model, create a `config.yaml` file similar to the [example config file](config.yml.example) and copy it under your checkpoints directory. Read the [configuration](#model-configuration) guide for more information on model configuration.
 
-You can evaluate the test dataset which list file path is recorded in `config.yaml` by this command:
+Set the `MODE:2` in corresponding config file `config.yaml`, you can evaluate the test dataset which list file path is recorded in `config.yaml` by this command:
 ```bash
 python3 test.py --path ./checkpoints/Celeba
 ```
