@@ -1,15 +1,17 @@
-### Note: this is journal version of paper[..] 
-If you want to download the code of journal version, please use:  
-git clone --single-branch --branch journal https://github.com/GuardSkill/Large-Scale-Feature-Inpainting.git
-## Image Inpainting with Interactive Separation Network and Progressive Reconstruction
+## LPI-Net: Lightweight Inpainting Network with Pyramidal Hierarchy
  [BibTex](#citation)
 
 
 ### Introduction:
 <p align='center'>
-  <img src='https://github.com/GuardSkill/Large-Scale-Feature-Inpainting/blob/master/images/Framework.png' width='870'/>
+  <img src='figs/framework.png' width='870'/>
 </p>
-The framework of Interactive Fusion Network, which is used to replace the generator of the inpainting architecture.
+The LPI-Net structure.
+
+<p align='center'>
+  <img src='figs/Internal.png' width='400'/>
+</p>
+The Lightweight ResBlock in  LPI-Net.
 
 ## Prerequisites
 - Python 3.6
@@ -17,11 +19,6 @@ The framework of Interactive Fusion Network, which is used to replace the genera
 - NVIDIA GPU + CUDA cuDNN
 
 ## Installation
-- Clone this repo:
-```bash
-git clone --single-branch --branch journal https://github.com/GuardSkill/Large-Scale-Feature-Inpainting.git
-cd Large-Scale-Feature-Inpainting
-```
 - Install [PyTorch](http://pytorch.org).
 - Install python requirements:
 ```bash
@@ -54,10 +51,10 @@ We additionally provide the [code](https://github.com/GuardSkill/AITools/blob/ma
 
 
 ## Getting Started
-Download the pre-trained models using the following links and copy them under `./checkpoints` directory.
+<!--Download the pre-trained models using the following links and copy them under `./checkpoints` directory.
 
 Pretrained on Places2: [mega](https://mega.nz/#!0CJwFYCR!mgjBWOEP6Pkz9Iqf5JDDJ2sA94W0cZy2ZIzbanxfJvk) | [Google Drive]()
-Pretrained on CelebA:  [mega](https://mega.nz/#!FORDzQCD!lwSL2NII_OcRvncq4as5EBnO6PlaXQNnBB0d-QroVCU) | [Google Drive]()
+Pretrained on CelebA:  [mega](https://mega.nz/#!FORDzQCD!lwSL2NII_OcRvncq4as5EBnO6PlaXQNnBB0d-QroVCU) | [Google Drive]() -->
 
 Please note that our Places2 models are trained by multi GPUs, so please load using multiple GPUS. Specially, replace 3th row of config.yml in your checkpoint with code:```GPU: [0,1]```
 

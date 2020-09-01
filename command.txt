@@ -1,0 +1,94 @@
+LULU:
+
+nohup /home/lulu/anaconda2/envs/cuda9/bin/python3  train.py --checkpoint ./checkpoints/Gradient > Gradient.out &
+
+nohup /home/lulu/anaconda2/envs/cuda9/bin/python3  train.py --checkpoint ./checkpoints/Gradient > Gradient.out &
+
+nohup /home/lulu/anaconda2/envs/cuda9/bin/python3  train.py --checkpoints ./checkpoints/tune_parameters > ./checkpoints/tune_parameters/tune.out &
+
+
+nohup /home/lulu/anaconda2/envs/cuda9/bin/python3  train.py --checkpoints ./checkpoints/ADV_L1_STYLE > ./checkpoints/ADV_L1_STYLE/record.out &
+nohup /home/lulu/anaconda2/envs/cuda9/bin/python3  train.py --checkpoints ./checkpoints/ADV_L1_STYLE_PERC > ./checkpoints/ADV_L1_STYLE_PERC/record_adv3.out &
+nohup /home/lulu/anaconda2/envs/cuda9/bin/python3  train.py --checkpoints ./checkpoints/ADV_L1_STYLE_PERC_FM > ./checkpoints/ADV_L1_STYLE_PERC_FM/record.out &
+nohup /home/lulu/anaconda2/envs/cuda9/bin/python3  train.py --checkpoints ./checkpoints/ADV_L1_STYLE_PERC_ADV3 > ./checkpoints/ADV_L1_STYLE_PERC_ADV3/record.out &
+nohup /home/lulu/anaconda2/envs/cuda9/bin/python3  train.py --checkpoints ./checkpoints/ADV_L1_STYLE_PERC_ADV5 > ./checkpoints/ADV_L1_STYLE_PERC_ADV5/record.out &
+nohup /home/lulu/anaconda2/envs/cuda9/bin/python3  train.py --checkpoints ./checkpoints/ADV_L1_STYLE_PERC_ADV10 > ./checkpoints/ADV_L1_STYLE_PERC_ADV10/record.out &
+nohup /home/lulu/anaconda2/envs/cuda9/bin/python3  train.py --checkpoints ./checkpoints/ADV3_L1_STYLE3_PERC > ./checkpoints/ADV3_L1_STYLE3_PERC/record1.out &
+./checkpoints/tune_parameters/ex3_L1_13.484269_ADV_30.525771_Style_1.034876_Perc_155.314466_Grad_0.000000_FM_32.331865
+------------------------------------------------------------------------------------------------------------------------------------------
+nohup python3 train.py --checkpoints ./checkpoints/ADV_STYLE_PERC > ./checkpoints/ADV_STYLE_PERC/record.out &
+CUDA_VISIBLE_DEVICES=0 nohup python3 train.py --model 3 --checkpoints ./checkpoints/color/color_test >> test_1b_2 &
+CUDA_VISIBLE_DEVICES=1 nohup python3 train.py --model 3 --checkpoints ./checkpoints/color/color_test_4b >> test_4b &
+CUDA_VISIBLE_DEVICES=1 nohup python3 train.py --model 3 --checkpoints ./checkpoints/color/color_test_fuse >> test_fuse &
+
+   --checkpoints ./checkpoints/tune_parameters
+nohup python3 train.py --model 3 --checkpoints ./checkpoints/sub_pixel >> subpixel.out &
+nohup python3 train.py --model 3 --checkpoints ./checkpoints/sub_pixel_0.001 >> subpixel_1.out &
+
+nohup python3 train.py --model 3 --checkpoints ./checkpoints/unet >> unet.out &
+
+nohup python3 train.py --model 3 --checkpoints ./checkpoints/subpixel/sub_pixel_2b >> subpixel_2b.out &
+nohup python3 train.py --model 3 --checkpoints ./checkpoints/subpixel/sub_pixel_3b >> subpixel_3b.out &
+nohup python3 train.py --model 3 --checkpoints ./checkpoints/subpixel/sub_pixel_1b >> subpixel_1b.out &
+
+nohup python3 test.py --model 3 --path ./checkpoints/sub_pixel >> test_mask1.out &
+
+
+
+Test And Wathch Image:
+python3 test.py --checkpoints ./checkpoints/unet --input ./examples/places2/images --mask ./examples/places2/masks --output ./test_results
+python3 test.py --checkpoints ./checkpoints/subpixel/sub_pixel_4b --input ./tip/raw --mask ./tip/mask --output ./test_results
+python3 test.py --checkpoints ./checkpoints/Celeba_block1 --input ./ICONIP2020/CelebA/damaged --mask ./ICONIP2020/CelebA/mask --output ./ICONIP2020/CelebA/test_results
+
+python3 test.py --checkpoints ./checkpoints/ADV_L1_STYLE_PERC --input ./tip/raw --mask ./tip/mask --output ./tip/output
+	
+Test:
+python3 test.py --path ./checkpoints/ADV_L1_STYLE_PERC_ADV3
+python3 test.py --path ./checkpoints/loss/ADV_1_L1_1
+python3 test.py --model 3 --path ./checkpoints/unet
+
+
+nohup tensorboard --logdir ./checkpoints &
+
+
+python ./scripts/flist.py --path path_to_places2_train_set --output ./datasets/places2_train.flist
+python ./scripts/flist.py --path path_to_places2_train_set --output ./datasets/places2_edges_val.flist
+python ./scripts/flist.py --path path_to_places2_train_set --output ./datasets/masks_test.flist
+
+python3 ./scripts/flist.py --path /home/lulu/Dataset/MaskSize1 --output ./datasets/masks_test1.flist
+
+python3 ./scripts/flist.py --path /home/lulu/Dataset/MaskSize1 --output ./datasets/masks_test1.flist
+
+python3 ./scripts/flist.py --path /disk2/Dataset/Mask/IrregularHoles --output ./datasets/mask_train.flist
+python3 ./scripts/flist.py --path /disk2/Dataset/img_align_celeba/ --celeba /disk2/Dataset/list_eval_partition.txt 
+
+
+------------------------------------------------------------------------------------------------------------------------------------------
+TEST
+
+CUDA_VISIBLE_DEVICES=0 nohup python3 train.py --model 1 --checkpoints ./checkpoints/edge/edge_tune >> edge_tune.out &
+CUDA_VISIBLE_DEVICES=0 nohup python3 train.py --model 1 --checkpoints ./checkpoints/edge/edge_test >> edge_test.out &
+nohup python3 train.py --model 3 --checkpoints ./checkpoints/color/color_tune >> color_tune.out &
+CUDA_VISIBLE_DEVICES=1 nohup python3 train.py --model 3 --checkpoints ./checkpoints/color/color_test >> color_test.out &
+nohup python3 train.py --model 3 --checkpoints ./checkpoints/color/color_test_new >> color_test_new.out &
+CUDA_VISIBLE_DEVICES=1 nohup python3 test.py --model 3 --path ./checkpoints/color/color_test >> test.out &
+CUDA_VISIBLE_DEVICES=1 python3 test.py --model 3 --path ./checkpoints/color/color_test
+CUDA_VISIBLE_DEVICES=0 nohup python3 test.py --model 3 --path ./checkpoints/color/color_test >> test2.out &
+CUDA_VISIBLE_DEVICES=1 nohup python3 train.py --model 3 --checkpoints ./checkpoints/color/color_test >> color_test &
+CUDA_VISIBLE_DEVICES=0 nohup python3 train.py --model 1 --checkpoints ./checkpoints/edge/edge_test >> edge_test &
+
+       非SWUST区域              学校SWUST区域映射端口
+54.254.158.233 11111           10.10.4.140   22              SSH访问
+54.254.158.233 11112           10.10.4.140   8888            Jupyter              
+54.254.158.233 11113           10.10.4.140   6006            Tensorborad
+
+
+
+python3 test.py \
+  --path ./checkpoints
+  --checkpoints ./checkpoints/places2 
+  --input ./examples/places2/images 
+  --mask ./examples/places2/masks
+  --output ./checkpoints/results
+
+python3 test.py --checkpoints ./checkpoints/places2 --input ./examples/places2/images --mask ./examples/places2/masks --output ./checkpoints/results
